@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affiliate Warehouse | Procurement & Price Monitoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            black: '#0A0A0A',
+                            dark: '#121212',
+                            gray: '#1E1E1E',
+                            light: '#F5F5F7',
+                            white: '#FFFFFF',
+                            lime: '#CCFF00', // Extracted from inspiration
+                            limeHover: '#B3E600',
+                            text: '#E5E5E5',
+                            muted: '#A1A1AA',
+                            border: '#333333'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #333 1px, transparent 1px), linear-gradient(to bottom, #333 1px, transparent 1px)",
+                        'dot-pattern': "radial-gradient(#333 1px, transparent 1px)"
+                    }
+                }
+            }
+        }
+        window.FontAwesomeConfig = { autoReplaceSvg: 'nest' };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.plot.ly/plotly-3.1.1.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0A0A0A; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(204, 255, 0, 0.15);
+        }
+        
+        .grid-bg {
+            background-size: 40px 40px;
+            mask-image: linear-gradient(to bottom, transparent, black, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+        }
+
+        /* Mobile Menu Transition */
+        #mobile-menu {
+            transition: all 0.3s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+        #mobile-menu.active {
+            max-height: 400px;
+            opacity: 1;
+        }
+
+        /* Smooth reveal animation classes */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-brand-black text-brand-text font-sans antialiased selection:bg-brand-lime selection:text-brand-black">
+
+    <!-- Navigation -->
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-300 border-b border-transparent bg-brand-black/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-brand-lime rounded-lg flex items-center justify-center text-brand-black font-bold text-xl">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-white">AFFILIATE<span class="font-light text-brand-muted">WAREHOUSE</span></span>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden lg:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#how-it-works" class="text-sm font-medium hover:text-brand-lime transition-colors">How It Works</a>
+                        <a href="#pricing-transparency" class="text-sm font-medium hover:text-brand-lime transition-colors">Price Tracking</a>
+                        <a href="#wholesaler-alignment" class="text-sm font-medium hover:text-brand-lime transition-colors">For Wholesalers</a>
+                        <a href="#faq" class="text-sm font-medium hover:text-brand-lime transition-colors">FAQ</a>
+                    </div>
+                </div>
+
+                <!-- CTA & Mobile Menu Button -->
+                <div class="flex items-center gap-4">
+                    <a href="#apply-contractor" class="hidden md:flex items-center gap-2 bg-brand-lime text-brand-black px-5 py-2.5 rounded-full font-semibold text-sm hover:bg-brand-limeHover transition-all shadow-lg shadow-brand-lime/20">
+                        <span>Apply Now</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                    <button id="mobile-menu-btn" class="lg:hidden text-white hover:text-brand-lime p-2">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu (Hidden by default) -->
+        <div id="mobile-menu" class="hidden lg:hidden bg-brand-dark border-b border-brand-border">
+            <div class="px-4 pt-2 pb-6 space-y-1">
+                <a href="#how-it-works" class="block px-3 py-3 text-base font-medium hover:bg-brand-gray hover:text-brand-lime rounded-md">How It Works</a>
+                <a href="#pricing-transparency" class="block px-3 py-3 text-base font-medium hover:bg-brand-gray hover:text-brand-lime rounded-md">Price Tracking</a>
+                <a href="#wholesaler-alignment" class="block px-3 py-3 text-base font-medium hover:bg-brand-gray hover:text-brand-lime rounded-md">For Wholesalers</a>
+                <a href="#apply-contractor" class="block px-3 py-3 text-base font-medium text-brand-lime bg-brand-gray/50 rounded-md mt-4">Apply as Contractor</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden min-h-[90vh] flex items-center border-b border-brand-border">
+        <!-- Background Elements -->
+        <div class="absolute inset-0 bg-brand-black z-0">
+            <div class="absolute inset-0 bg-[linear-gradient(to_right,#222_1px,transparent_1px),linear-gradient(to_bottom,#222_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-40"></div>
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-brand-lime/5 blur-[120px] rounded-full pointer-events-none"></div>
+        </div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div class="space-y-8 reveal active">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brand-border bg-brand-gray/50 text-xs font-mono text-brand-lime">
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-lime opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-lime"></span>
+                        </span>
+                        PROCUREMENT INTELLIGENCE 2.0
+                    </div>
+                    
+                    <h1 class="text-5xl lg:text-7xl font-bold tracking-tight text-white leading-[1.1]">
+                        Smarter pricing for <span class="text-brand-lime">trade business.</span>
+                    </h1>
+                    
+                    <p class="text-xl text-brand-muted max-w-lg leading-relaxed">
+                        We help electrical, HVAC, and solar contractors secure better pricing without disrupting existing wholesaler relationships.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                        <a href="#apply-contractor" class="flex items-center justify-center gap-3 bg-brand-lime text-brand-black px-8 py-4 rounded-lg font-bold text-base hover:bg-brand-limeHover transition-all shadow-[0_0_20px_rgba(204,255,0,0.3)]">
+                            Become a Preferred Contractor
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                        <a href="#learn-more" class="flex items-center justify-center gap-3 bg-transparent border border-brand-border text-white px-8 py-4 rounded-lg font-medium text-base hover:bg-brand-gray transition-all">
+                            How It Works
+                        </a>
+                    </div>
+
+                    <div class="pt-8 border-t border-brand-border flex items-center gap-8">
+                        <div>
+                            <p class="text-3xl font-bold text-white">1.1%</p>
+                            <p class="text-xs text-brand-muted uppercase tracking-wider mt-1">Fee on Savings</p>
+                        </div>
+                        <div class="h-10 w-px bg-brand-border"></div>
+                        <div>
+                            <p class="text-3xl font-bold text-white">0%</p>
+                            <p class="text-xs text-brand-muted uppercase tracking-wider mt-1">Upfront Cost</p>
+                        </div>
+                        <div class="h-10 w-px bg-brand-border"></div>
+                        <div>
+                            <p class="text-3xl font-bold text-white">100%</p>
+                            <p class="text-xs text-brand-muted uppercase tracking-wider mt-1">Wholesaler Safe</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hero Visual -->
+                <div class="relative lg:h-[600px] w-full reveal delay-200">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-brand-lime/10 to-transparent rounded-2xl border border-brand-border/50 backdrop-blur-sm p-1">
+                        <div class="h-full w-full bg-brand-black/80 rounded-xl overflow-hidden relative">
+                            <!-- Abstract Data Visualization UI -->
+                            <div class="absolute top-0 left-0 right-0 h-12 border-b border-brand-border flex items-center px-4 justify-between bg-brand-gray/50">
+                                <div class="flex gap-2">
+                                    <div class="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
+                                </div>
+                                <div class="text-xs font-mono text-brand-muted">price_monitor_v2.exe</div>
+                            </div>
+                            
+                            <div class="p-6 mt-12 space-y-6">
+                                <div class="flex justify-between items-end">
+                                    <div>
+                                        <div class="text-xs text-brand-muted mb-1">CURRENT SAVINGS TRACKER</div>
+                                        <div class="text-4xl font-mono text-white font-bold">$14,250.80</div>
+                                    </div>
+                                    <div class="text-brand-lime text-sm bg-brand-lime/10 px-2 py-1 rounded border border-brand-lime/20">
+                                        +12.4% vs Market
+                                    </div>
+                                </div>
+                                
+                                <!-- Chart Container -->
+                                <div id="hero-chart" class="h-48 w-full"></div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-brand-gray/30 p-4 rounded border border-brand-border">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <div class="w-8 h-8 rounded bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                                <i class="fa-solid fa-bolt"></i>
+                                            </div>
+                                            <span class="text-sm text-white">Electrical</span>
+                                        </div>
+                                        <div class="w-full bg-brand-black h-1.5 rounded-full overflow-hidden">
+                                            <div class="bg-blue-500 h-full w-[75%]"></div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-brand-gray/30 p-4 rounded border border-brand-border">
+                                        <div class="flex items-center gap-3 mb-2">
+                                            <div class="w-8 h-8 rounded bg-orange-500/20 flex items-center justify-center text-orange-400">
+                                                <i class="fa-solid fa-wind"></i>
+                                            </div>
+                                            <span class="text-sm text-white">HVAC</span>
+                                        </div>
+                                        <div class="w-full bg-brand-black h-1.5 rounded-full overflow-hidden">
+                                            <div class="bg-orange-500 h-full w-[60%]"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Floating Badge -->
+                            <div class="absolute bottom-6 right-6 bg-brand-lime text-brand-black px-4 py-2 rounded font-bold text-xs shadow-lg transform rotate-[-2deg]">
+                                LIVE MARKET DATA
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Logo Cloud -->
+    <div class="border-b border-brand-border bg-brand-black py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-sm font-mono text-brand-muted mb-8 uppercase tracking-widest">Trusted by industry leaders across Australia</p>
+            <div class="flex flex-wrap justify-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+                <!-- FontAwesome placeholders for brand logos -->
+                <div class="flex items-center gap-2 text-xl font-bold text-white"><i class="fa-brands fa-aws text-3xl"></i> VOLTEX</div>
+                <div class="flex items-center gap-2 text-xl font-bold text-white"><i class="fa-brands fa-pied-piper text-3xl"></i> SPARK</div>
+                <div class="flex items-center gap-2 text-xl font-bold text-white"><i class="fa-brands fa-laravel text-3xl"></i> FLUX</div>
+                <div class="flex items-center gap-2 text-xl font-bold text-white"><i class="fa-brands fa-react text-3xl"></i> ATOM</div>
+                <div class="flex items-center gap-2 text-xl font-bold text-white"><i class="fa-brands fa-unity text-3xl"></i> NEXUS</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-24 bg-brand-dark relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-20">
+                <h2 class="text-3xl md:text-5xl font-bold text-white mb-6">Streamlined procurement in <span class="text-brand-lime">3 simple steps.</span></h2>
+                <p class="text-brand-muted text-lg">We don't change your suppliers. We just ensure you're paying the right price.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 relative">
+                <!-- Connecting Line (Desktop) -->
+                <div class="hidden md:block absolute top-12 left-[16%] right-[16%] h-px bg-gradient-to-r from-transparent via-brand-border to-transparent border-t border-dashed border-brand-muted/30 z-0"></div>
+
+                <!-- Step 1 -->
+                <div class="relative z-10 group">
+                    <div class="bg-brand-gray border border-brand-border p-8 rounded-2xl h-full hover:border-brand-lime/50 transition-all duration-300 hover:-translate-y-2">
+                        <div class="w-16 h-16 bg-brand-black rounded-xl border border-brand-border flex items-center justify-center mb-6 group-hover:bg-brand-lime group-hover:text-brand-black transition-colors">
+                            <i class="fa-solid fa-file-contract text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4">1. Apply & Connect</h3>
+                        <p class="text-brand-muted leading-relaxed">
+                            Submit your application. Once approved, we integrate discreetly with your existing wholesaler accounts to establish a baseline.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="relative z-10 group">
+                    <div class="bg-brand-gray border border-brand-border p-8 rounded-2xl h-full hover:border-brand-lime/50 transition-all duration-300 hover:-translate-y-2">
+                        <div class="w-16 h-16 bg-brand-black rounded-xl border border-brand-border flex items-center justify-center mb-6 group-hover:bg-brand-lime group-hover:text-brand-black transition-colors">
+                            <i class="fa-solid fa-magnifying-glass-chart text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4">2. Analyze & Monitor</h3>
+                        <p class="text-brand-muted leading-relaxed">
+                            Our system continuously scans 1000s of SKUs across the market, identifying price discrepancies and savings opportunities in real-time.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="relative z-10 group">
+                    <div class="bg-brand-gray border border-brand-border p-8 rounded-2xl h-full hover:border-brand-lime/50 transition-all duration-300 hover:-translate-y-2">
+                        <div class="w-16 h-16 bg-brand-black rounded-xl border border-brand-border flex items-center justify-center mb-6 group-hover:bg-brand-lime group-hover:text-brand-black transition-colors">
+                            <i class="fa-solid fa-piggy-bank text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-4">3. Save & Scale</h3>
+                        <p class="text-brand-muted leading-relaxed">
+                            You get better pricing on your usual orders. We only charge a small 1.1% fee on the verified savings we generate. No savings = no fee.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Transparency & Trust Section -->
+    <section id="pricing-transparency" class="py-24 bg-brand-black border-y border-brand-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                
+                <!-- Visual Comparison -->
+                <div class="order-2 lg:order-1 relative">
+                    <div class="absolute -inset-4 bg-brand-lime/5 blur-3xl rounded-full"></div>
+                    <div class="relative bg-brand-gray border border-brand-border rounded-xl overflow-hidden shadow-2xl">
+                        <div class="bg-brand-dark px-6 py-4 border-b border-brand-border flex justify-between items-center">
+                            <span class="font-mono text-sm text-brand-muted">PRICE_COMPARISON_MATRIX</span>
+                            <div class="flex gap-2">
+                                <div class="w-2 h-2 rounded-full bg-brand-border"></div>
+                                <div class="w-2 h-2 rounded-full bg-brand-border"></div>
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <!-- Item 1 -->
+                            <div class="flex items-center justify-between p-4 rounded bg-brand-black/50 border border-brand-border">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 bg-white/5 rounded flex items-center justify-center"><i class="fa-solid fa-plug text-brand-muted"></i></div>
+                                    <div>
+                                        <div class="text-white font-medium">Clipsal 2000 Series PowerPoint</div>
+                                        <div class="text-xs text-brand-muted">SKU: CLI-2025</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-brand-muted line-through text-sm">$14.50</div>
+                                    <div class="text-brand-lime font-bold text-lg">$11.20</div>
+                                </div>
+                            </div>
+                            <!-- Item 2 -->
+                            <div class="flex items-center justify-between p-4 rounded bg-brand-black/50 border border-brand-border">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 bg-white/5 rounded flex items-center justify-center"><i class="fa-solid fa-fan text-brand-muted"></i></div>
+                                    <div>
+                                        <div class="text-white font-medium">Split System 2.5kW Unit</div>
+                                        <div class="text-xs text-brand-muted">SKU: MIT-2500</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-brand-muted line-through text-sm">$850.00</div>
+                                    <div class="text-brand-lime font-bold text-lg">$795.00</div>
+                                </div>
+                            </div>
+                            <!-- Item 3 -->
+                            <div class="flex items-center justify-between p-4 rounded bg-brand-black/50 border border-brand-border">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 bg-white/5 rounded flex items-center justify-center"><i class="fa-solid fa-solar-panel text-brand-muted"></i></div>
+                                    <div>
+                                        <div class="text-white font-medium">Solar Inverter 5kW</div>
+                                        <div class="text-xs text-brand-muted">SKU: FRN-5000</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-brand-muted line-through text-sm">$1,200.00</div>
+                                    <div class="text-brand-lime font-bold text-lg">$1,050.00</div>
+                                </div>
+                            </div>
+                            
+                            <div class="pt-4 border-t border-brand-border flex justify-between items-center mt-4">
+                                <span class="text-brand-muted text-sm">Total Monthly Savings</span>
+                                <span class="text-white font-mono font-bold text-xl">+$3,450.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Content -->
+                <div class="order-1 lg:order-2">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">Total transparency. <br>No lock-in contracts.</h2>
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-brand-gray border border-brand-border flex items-center justify-center text-brand-lime">
+                                <i class="fa-solid fa-lock-open"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-white">Freedom to Choose</h4>
+                                <p class="text-brand-muted mt-2">You are free to compare pricing against your current suppliers anytime. If we can't beat it, you don't use us. Simple.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-brand-gray border border-brand-border flex items-center justify-center text-brand-lime">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-white">Performance-Based Fees</h4>
+                                <p class="text-brand-muted mt-2">Our "No discount, no charge" model means we only earn when you save. We take a tiny 1.1% of the verified savings.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-brand-gray border border-brand-border flex items-center justify-center text-brand-lime">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-white">Compliance & Ethics</h4>
+                                <p class="text-brand-muted mt-2">We operate strictly within wholesaler systems. No resale, no alteration of terms. Every purchase is fully traceable and job-coded.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Wholesaler Alignment Section -->
+    <section id="wholesaler-alignment" class="py-24 bg-brand-dark relative">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="bg-gradient-to-br from-brand-gray to-brand-black border border-brand-border rounded-2xl p-8 md:p-12 lg:p-16">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <div class="inline-block bg-brand-lime/10 text-brand-lime text-xs font-bold px-3 py-1 rounded-full mb-6 border border-brand-lime/20">WHOLESALER SAFE</div>
+                        <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">We are not a disruptor. <br>We are an accelerator.</h2>
+                        <p class="text-brand-muted text-lg mb-8">
+                            Affiliate Warehouse is designed to work *with* wholesalers, not against them. We streamline the ordering process for high-volume contractors, reducing your cost-to-serve while maintaining your direct relationship with the customer.
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                            <div class="flex items-center gap-3 text-white">
+                                <i class="fa-solid fa-check text-brand-lime"></i> No disruption to systems
+                            </div>
+                            <div class="flex items-center gap-3 text-white">
+                                <i class="fa-solid fa-check text-brand-lime"></i> Direct billing retained
+                            </div>
+                            <div class="flex items-center gap-3 text-white">
+                                <i class="fa-solid fa-check text-brand-lime"></i> Reduced account admin
+                            </div>
+                            <div class="flex items-center gap-3 text-white">
+                                <i class="fa-solid fa-check text-brand-lime"></i> High-volume loyalty
+                            </div>
+                        </div>
+                        <a href="#apply-wholesaler" class="inline-flex items-center gap-2 text-white border-b border-brand-lime pb-1 hover:text-brand-lime transition-colors">
+                            Wholesaler Expression of Interest <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                    </div>
+                    <div class="relative">
+                        <div class="aspect-square rounded-full border border-brand-border absolute inset-0 animate-[spin_10s_linear_infinite]"></div>
+                        <div class="aspect-square rounded-full border border-brand-border/50 absolute inset-4 animate-[spin_15s_linear_infinite_reverse]"></div>
+                        <div class="bg-brand-black/50 backdrop-blur-md border border-brand-border p-8 rounded-xl relative z-10">
+                            <h3 class="text-xl font-bold text-white mb-4">Partner Benefits</h3>
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-3">
+                                    <div class="w-6 h-6 rounded bg-brand-gray flex items-center justify-center text-brand-lime flex-shrink-0 mt-0.5">1</div>
+                                    <p class="text-sm text-brand-muted">Receive consolidated orders from pre-vetted, high-volume contractors.</p>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="w-6 h-6 rounded bg-brand-gray flex items-center justify-center text-brand-lime flex-shrink-0 mt-0.5">2</div>
+                                    <p class="text-sm text-brand-muted">Lower your cost of acquisition and ongoing account management.</p>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <div class="w-6 h-6 rounded bg-brand-gray flex items-center justify-center text-brand-lime flex-shrink-0 mt-0.5">3</div>
+                                    <p class="text-sm text-brand-muted">Access market intelligence on pricing trends and demand.</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials & Social Proof -->
+    <section class="py-24 bg-brand-black border-t border-brand-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-white text-center mb-16">What the trade is saying</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Review 1 -->
+                <div class="bg-brand-gray p-8 rounded-xl border border-brand-border relative">
+                    <div class="text-brand-lime text-4xl font-serif absolute top-4 left-6 opacity-20">"</div>
+                    <div class="flex gap-1 text-yellow-500 mb-4 text-xs">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-brand-text mb-6 relative z-10">
+                        "Honestly, I was skeptical at first. But the onboarding was seamless, and we saved about 12% on our first major cable order. It's a no-brainer."
+                    </p>
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-brand-border overflow-hidden">
+                            <img src="https://devshorifultechnosys.com/wp-content/uploads/2025/12/images.jpeg" alt="User" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <div class="text-white font-bold text-sm">Mark D.</div>
+                            <div class="text-brand-muted text-xs">Director, Spark Electrical</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 2 -->
+                <div class="bg-brand-gray p-8 rounded-xl border border-brand-border relative">
+                    <div class="text-brand-lime text-4xl font-serif absolute top-4 left-6 opacity-20">"</div>
+                    <div class="flex gap-1 text-yellow-500 mb-4 text-xs">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-brand-text mb-6 relative z-10">
+                        "The transparency is what sold me. I can check the pricing myself. Affiliate Warehouse just handles the negotiation legwork I don't have time for."
+                    </p>
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-brand-border overflow-hidden">
+                            <img src="https://devshorifultechnosys.com/wp-content/uploads/2025/12/man-2.jpeg" alt="User" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <div class="text-white font-bold text-sm">James T.</div>
+                            <div class="text-brand-muted text-xs">Ops Manager, HVAC Pro</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 3 -->
+                <div class="bg-brand-gray p-8 rounded-xl border border-brand-border relative">
+                    <div class="text-brand-lime text-4xl font-serif absolute top-4 left-6 opacity-20">"</div>
+                    <div class="flex gap-1 text-yellow-500 mb-4 text-xs">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="text-brand-text mb-6 relative z-10">
+                        "Finally, a procurement service that actually understands the trade. No fluff, just better prices and reliable supply."
+                    </p>
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-brand-border overflow-hidden">
+                            <img src="https://devshorifultechnosys.com/wp-content/uploads/2025/12/Man-3.jpeg" alt="User" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <div class="text-white font-bold text-sm">Sarah L.</div>
+                            <div class="text-brand-muted text-xs">Procurement Lead, SolarCo</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Conversion Section (Forms) -->
+    <section id="conversion" class="py-24 bg-brand-dark relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-brand-lime to-transparent opacity-50"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-5xl font-bold text-white mb-6">Choose your pathway.</h2>
+                <p class="text-brand-muted">Select the option that best describes you to get started.</p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                
+                <!-- Contractor Application Card -->
+                <div id="apply-contractor" class="bg-brand-gray border border-brand-lime/30 rounded-2xl p-8 shadow-lg shadow-brand-lime/5 transform hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-12 h-12 bg-brand-lime rounded-lg flex items-center justify-center text-brand-black text-xl mb-6">
+                        <i class="fa-solid fa-hard-hat"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Become a Preferred Contractor</h3>
+                    <p class="text-sm text-brand-muted mb-8">For established trade businesses looking to optimize procurement.</p>
+                    
+                    <form class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-brand-muted mb-1">Business Name</label>
+                            <input type="text" class="w-full bg-brand-black border border-brand-border rounded px-4 py-2.5 text-white focus:border-brand-lime focus:outline-none focus:ring-1 focus:ring-brand-lime transition-colors" placeholder="e.g. Spark Electrical PTY LTD">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-brand-muted mb-1">Contact Name</label>
+                            <input type="text" class="w-full bg-brand-black border border-brand-border rounded px-4 py-2.5 text-white focus:border-brand-lime focus:outline-none focus:ring-1 focus:ring-brand-lime transition-colors" placeholder="Full Name">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-brand-muted mb-1">Mobile</label>
+                                <input type="tel" class="w-full bg-brand-black border border-brand-border rounded px-4 py-2.5 text-white focus:border-brand-lime focus:outline-none focus:ring-1 focus:ring-brand-lime transition-colors" placeholder="0400...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-brand-muted mb-1">Email</label>
+                                <input type="email" class="w-full bg-brand-black border border-brand-border rounded px-4 py-2.5 text-white focus:border-brand-lime focus:outline-none focus:ring-1 focus:ring-brand-lime transition-colors" placeholder="name@company.com">
+                            </div>
+                        </div>
+                        <button type="button" onclick="showModal('success-modal')" class="w-full bg-brand-lime text-brand-black font-bold py-3 rounded hover:bg-brand-limeHover transition-colors mt-4">
+                            Apply Now
+                        </button>
+                        <p class="text-xs text-center text-brand-muted mt-4">
+                            <i class="fa-solid fa-lock mr-1"></i> No discount, no charge. Compare anytime.
+                        </p>
+                    </form>
+                </div>
+
+                <!-- Info / Callback Card -->
+                <div id="learn-more" class="bg-brand-black border border-brand-border rounded-2xl p-8 hover:border-brand-border/80 transition-all duration-300">
+                    <div class="w-12 h-12 bg-brand-gray border border-brand-border rounded-lg flex items-center justify-center text-white text-xl mb-6">
+                        <i class="fa-solid fa-phone"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Request Information</h3>
+                    <p class="text-sm text-brand-muted mb-8">Not ready to apply? Get a callback to discuss how it works.</p>
+                    
+                    <form class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-brand-muted mb-1">Name</label>
+                            <input type="text" class="w-full bg-brand-gray border border-brand-border rounded px-4 py-2.5 text-white focus:border-brand-lime focus:outline-none focus:ring-1 focus:ring-brand-lime transition-colors" placeholder="Full Name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-brand-muted mb-1">Business</label>
+                            <input type="text" class="w-full bg-brand-gray border border-brand-border rounded px-4 py-2.5 text-white focus:border-brand-lime focus:outline-none focus:ring-1 focus:ring-brand-lime transition-colors" placeholder="Business Name">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-brand-muted mb-1">Phone</label>
+                                <input type="tel" class="w-full bg-brand-gray border border-brand-border rounded px-4 py-2.5 text-white focus:border-brand-lime focus:outline-none focus:ring-1 focus:ring-brand-lime transition-colors" placeholder="0400...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-brand-muted mb-1">Email</label>
+                                <input type="email" class="w-full bg-brand-gray border border-brand-border rounded px-4 py-2.5 text-white focus:border-brand-lime focus:outline-none focus:ring-1 focus:ring-brand-lime transition-colors" placeholder="name@company.com">
+                            </div>
+                        </div>
+                        <button type="button" onclick="showModal('success-modal')" class="w-full bg-brand-gray border border-brand-border text-white font-bold py-3 rounded hover:bg-brand-gray/80 transition-colors mt-4">
+                            Request Callback
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Wholesaler Interest Card -->
+                <div id="apply-wholesaler" class="bg-brand-black border border-brand-border rounded-2xl p-8 hover:border-brand-border/80 transition-all duration-300">
+                    <div class="w-12 h-12 bg-brand-gray border border-brand-border rounded-lg flex items-center justify-center text-white text-xl mb-6">
+                        <i class="fa-solid fa-handshake"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Wholesaler Partnership</h3>
+                    <p class="text-sm text-brand-muted mb-8">For suppliers interested in compliant, relationship-led dialogue.</p>
+                    
+                    <form class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-brand-muted mb-1">Company Name</label>
+                            <input type="text" class="w-full bg-brand-gray border border-brand-border rounded px-4 py-2.5 text-white focus:border-brand-lime focus:outline-none focus:ring-1 focus:ring-brand-lime transition-colors" placeholder="Wholesaler Name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-brand-muted mb-1">Contact Name</label>
+                            <input type="text" class="w-full bg-brand-gray border border-brand-border rounded px-4 py-2.5 text-white focus:border-brand-lime focus:outline-none focus:ring-1 focus:ring-brand-lime transition-colors" placeholder="Full Name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-brand-muted mb-1">Email</label>
+                            <input type="email" class="w-full bg-brand-gray border border-brand-border rounded px-4 py-2.5 text-white focus:border-brand-lime focus:outline-none focus:ring-1 focus:ring-brand-lime transition-colors" placeholder="name@company.com">
+                        </div>
+                        <button type="button" onclick="showModal('success-modal')" class="w-full bg-brand-gray border border-brand-border text-white font-bold py-3 rounded hover:bg-brand-gray/80 transition-colors mt-4">
+                            Express Interest
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="py-24 bg-brand-black border-t border-brand-border">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-white text-center mb-12">Frequently Asked Questions</h2>
+            
+            <div class="space-y-4">
+                <!-- FAQ Item 1 -->
+                <div class="border border-brand-border rounded-lg bg-brand-gray overflow-hidden">
+                    <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none" onclick="toggleFaq(this)">
+                        <span class="font-bold text-white">Is there a minimum spend requirement?</span>
+                        <i class="fa-solid fa-chevron-down text-brand-lime transition-transform"></i>
+                    </button>
+                    <div class="hidden px-6 pb-4 text-brand-muted text-sm border-t border-brand-border/50 pt-4">
+                        No, there are no lock-in contracts or minimum spend requirements. You can use our service as much or as little as you like.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div class="border border-brand-border rounded-lg bg-brand-gray overflow-hidden">
+                    <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none" onclick="toggleFaq(this)">
+                        <span class="font-bold text-white">Does this affect my relationship with my wholesaler rep?</span>
+                        <i class="fa-solid fa-chevron-down text-brand-lime transition-transform"></i>
+                    </button>
+                    <div class="hidden px-6 pb-4 text-brand-muted text-sm border-t border-brand-border/50 pt-4">
+                        Absolutely not. We work in the background to ensure pricing compliance. Your relationship with your rep and your branch remains exactly the same.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div class="border border-brand-border rounded-lg bg-brand-gray overflow-hidden">
+                    <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none" onclick="toggleFaq(this)">
+                        <span class="font-bold text-white">How do you make money?</span>
+                        <i class="fa-solid fa-chevron-down text-brand-lime transition-transform"></i>
+                    </button>
+                    <div class="hidden px-6 pb-4 text-brand-muted text-sm border-t border-brand-border/50 pt-4">
+                        We charge a small fee of 1.1% on the verified savings we generate for you. If we don't save you money, we don't charge you a cent.
+                    </div>
+                </div>
+                
+                 <!-- FAQ Item 4 -->
+                 <div class="border border-brand-border rounded-lg bg-brand-gray overflow-hidden">
+                    <button class="w-full px-6 py-4 text-left flex justify-between items-center focus:outline-none" onclick="toggleFaq(this)">
+                        <span class="font-bold text-white">Is my data secure?</span>
+                        <i class="fa-solid fa-chevron-down text-brand-lime transition-transform"></i>
+                    </button>
+                    <div class="hidden px-6 pb-4 text-brand-muted text-sm border-t border-brand-border/50 pt-4">
+                        Yes. We use enterprise-grade encryption and security protocols. Your pricing data is never shared with competitors.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-brand-dark border-t border-brand-border pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-12 mb-12">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 bg-brand-lime rounded flex items-center justify-center text-brand-black font-bold">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <span class="font-bold text-lg text-white">AFFILIATE<span class="font-light text-brand-muted">WAREHOUSE</span></span>
+                    </div>
+                    <p class="text-brand-muted text-sm max-w-sm mb-6">
+                        Empowering Australian trade businesses with data-driven procurement solutions. Transparent, efficient, and ethical.
+                    </p>
+                    <div class="flex gap-4">
+                        <a href="#" class="text-brand-muted hover:text-white transition-colors"><i class="fa-brands fa-linkedin text-xl"></i></a>
+                        <a href="#" class="text-brand-muted hover:text-white transition-colors"><i class="fa-brands fa-twitter text-xl"></i></a>
+                        <a href="#" class="text-brand-muted hover:text-white transition-colors"><i class="fa-solid fa-envelope text-xl"></i></a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-white font-bold mb-4">Platform</h4>
+                    <ul class="space-y-2 text-sm text-brand-muted">
+                        <li><a href="#how-it-works" class="hover:text-brand-lime transition-colors">How it Works</a></li>
+                        <li><a href="#pricing-transparency" class="hover:text-brand-lime transition-colors">Pricing</a></li>
+                        <li><a href="#wholesaler-alignment" class="hover:text-brand-lime transition-colors">For Wholesalers</a></li>
+                        <li><a href="#" class="hover:text-brand-lime transition-colors">Login</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-white font-bold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-sm text-brand-muted">
+                        <li><a href="#" class="hover:text-brand-lime transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-brand-lime transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="hover:text-brand-lime transition-colors">Compliance Statement</a></li>
+                        <li><a href="#" class="hover:text-brand-lime transition-colors">Disclaimer</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-brand-border pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-xs text-brand-muted">
+                    © 2026 Affiliate Warehouse. All rights reserved. ABN 12 345 678 901.
+                </p>
+                <p class="text-xs text-brand-muted text-center md:text-right max-w-2xl">
+                    Disclaimer: Affiliate Warehouse acts as an independent procurement support service. All savings estimates are based on historical data and may vary. We are not a bank or financial advisor.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="hideModal('success-modal')"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-4">
+            <div class="bg-brand-gray border border-brand-lime rounded-2xl p-8 shadow-[0_0_40px_rgba(204,255,0,0.1)] text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-brand-lime"></div>
+                <div class="w-16 h-16 bg-brand-lime/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa-solid fa-check text-3xl text-brand-lime"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-white mb-2">Application Received</h3>
+                <p class="text-brand-muted mb-6">Thanks — your details have been received. We'll review your application and call you at your scheduled time to walk through the onboarding process.</p>
+                <button onclick="hideModal('success-modal')" class="bg-brand-lime text-brand-black font-bold px-6 py-3 rounded hover:bg-brand-limeHover transition-colors w-full">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Mobile Menu Toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            const icon = this.querySelector('i');
+            menu.classList.toggle('hidden');
+            setTimeout(() => {
+                menu.classList.toggle('active');
+            }, 10);
+            icon.classList.toggle('fa-bars');
+            icon.classList.toggle('fa-xmark');
+        });
+
+        // FAQ Toggle
+        function toggleFaq(button) {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Modal Functions
+        function showModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+        function hideModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // Scroll Reveal
+        window.addEventListener('scroll', reveal);
+        function reveal() {
+            var reveals = document.querySelectorAll('.reveal');
+            for (var i = 0; i < reveals.length; i++) {
+                var windowHeight = window.innerHeight;
+                var elementTop = reveals[i].getBoundingClientRect().top;
+                var elementVisible = 150;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add('active');
+                }
+            }
+        }
+        // Trigger once on load
+        reveal();
+
+        // Chart Generation
+        window.addEventListener('load', function() {
+            try {
+                // Mock Data for Price Comparison Chart
+                var trace1 = {
+                    x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    y: [100, 102, 105, 108, 110, 112],
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Market Price Index',
+                    line: {
+                        color: '#555555',
+                        width: 2,
+                        dash: 'dot'
+                    }
+                };
+
+                var trace2 = {
+                    x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    y: [95, 92, 88, 85, 82, 80],
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Affiliate Price',
+                    line: {
+                        color: '#CCFF00',
+                        width: 3
+                    },
+                    fill: 'tozeroy',
+                    fillcolor: 'rgba(204, 255, 0, 0.1)'
+                };
+
+                var layout = {
+                    showlegend: false,
+                    xaxis: { 
+                        showgrid: false,
+                        color: '#666',
+                        tickfont: { family: 'JetBrains Mono', size: 10 }
+                    },
+                    yaxis: { 
+                        showgrid: true,
+                        gridcolor: '#333',
+                        color: '#666',
+                        tickfont: { family: 'JetBrains Mono', size: 10 }
+                    },
+                    margin: { t: 20, r: 20, b: 30, l: 30 },
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    hovermode: 'closest'
+                };
+
+                var config = {
+                    responsive: true,
+                    displayModeBar: false
+                };
+
+                Plotly.newPlot('hero-chart', [trace1, trace2], layout, config);
+
+            } catch(e) {
+                console.error("Chart generation failed", e);
+            }
+        });
+    </script>
+</body>
+</html>
